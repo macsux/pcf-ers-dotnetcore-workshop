@@ -1,5 +1,5 @@
 ﻿@using Articulate.Models
-@model System.Collections.Generic.List<Articulate.Models.Attendee>
+@model System.Collections.Generic.List<Articulate.Services.Attendee>
 
 <!--  PAGE BODY -->
 <div class="container" role="main">
@@ -30,22 +30,27 @@
 					Services factor</a>. Services are <i>attached</i>, in PCF case, <i>bound</i>
 				to applications.
 			</p>
+			
+			<p><b>Database Provider:</b> @ViewBag.RepositoryProvider</p>
+			<p><b>Endpoint:</b> @ViewBag.Endpoint</p>
 		</div>
 
 	</div>
 
 
 	<div class="row">
-
-		<div class="col-md-8">
+			@if (ViewBag.IsMigrated)
+			{
+			<div class="col-md-8">
 
 			<h4>Attendees Database Tool</h4>
 
 			<div class="col-md-4">
 				<div class="panel panel-default">
+					
 					@if (ViewBag.AddFailed == true)
 					{
-						<div class="alert alert-danger" >
+						<div class="alert alert-danger">
 							There was a problem adding an attendee. Is the <b>attendee-service</b> running?
 						</div>
 					}
@@ -55,19 +60,19 @@
 							<div class="form-group required">
 								<label>First Name</label>
 								<input type="text"
-									   class="form-control" required="required" id="firstName"
-									   name="firstName"/>
+								       class="form-control" required="required" id="firstName"
+								       name="firstName"/>
 							</div>
 							<div class="form-group">
 								<label>Last Name</label>
 								<input type="text"
-									   class="form-control" required="required" id="lastName"
-									   name="lastName"/>
+								       class="form-control" required="required" id="lastName"
+								       name="lastName"/>
 							</div>
 							<div class="form-group">
 								<label>Email</label>
 								<input type="email" class="form-control"
-									   required="required" id="emailAddress" name="emailAddress"/>
+								       required="required" id="emailAddress" name="emailAddress"/>
 							</div>
 							<button type="submit" class="btn btn-default center-block">Add</button>
 						</form>
@@ -103,6 +108,20 @@
 				<a href="/clean" class="btn btn-danger center-block">Erase All Records</a>
 			</div>
 		</div>
+
+			}
+			else
+			{
+				<div class="alert alert-danger col-md-8">
+					Database has not been initialized. Apply migrations to the database by launching the app with "runtask migrate" argument. 
+					Locally:
+					<pre>dotnet run Articulate.dll --runtask migrate</pre>
+					On PCF:
+					<pre>cf run-task articulate-ui "exec dotnet ./Articulate.dll --runtask migrate"</pre>
+                    					
+					Alternatively, <a href="/migrate">invoke the task directly from code</a>.
+				</div>
+			}
 
 		<div class="col-md-4">
 			@await Html.PartialAsync("Tutorial", (AppEnv)ViewBag.AppEnv)

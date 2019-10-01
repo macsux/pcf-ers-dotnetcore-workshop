@@ -1,4 +1,4 @@
-﻿namespace Articulate.Models
+﻿namespace Articulate.Services
 {
     
     public class Attendee

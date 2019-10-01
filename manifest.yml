@@ -1,0 +1,8 @@
+---
+applications:
+- name: articulate-ui
+  memory: 512M
+  instances: 1
+  random-route: true
+  path: src\Articulate.UI\bin\Debug\netcoreapp2.2\publish
+  services: []

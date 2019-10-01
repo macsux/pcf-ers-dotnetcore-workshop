@@ -1,16 +1,25 @@
-﻿using Articulate.Models;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Articulate.Models;
+using Articulate.Repositories;
 using Articulate.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Steeltoe.CloudFoundry.Connector.EFCore;
+using Steeltoe.Common.Tasks;
 using Steeltoe.Extensions.Configuration.CloudFoundry;
 using Steeltoe.Management.CloudFoundry;
 using Steeltoe.Management.Endpoint;
+using Steeltoe.Management.Endpoint.DbMigrations;
 using Steeltoe.Management.Endpoint.Env;
 using Steeltoe.Management.Hypermedia;
+using Steeltoe.Management.TaskCore;
 using Steeltoe.Management.Tracing;
 
 namespace Articulate
@@ -26,33 +35,46 @@ namespace Articulate
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
-            services.ConfigureCloudFoundryOptions(Configuration);
+            services.ConfigureCloudFoundryOptions(Configuration); // register options that parse VCAP_APPLICATION & VCAP_SERVICES
             services.AddSingleton(Configuration);
-            services.AddCloudFoundryActuators(Configuration, MediaTypeVersion.V2, ActuatorContext.ActuatorAndCloudFoundry);
-            services.AddEnvActuator(Configuration);
-            services.AddDistributedTracing(Configuration);
+            
+            services.AddCloudFoundryActuators(Configuration, MediaTypeVersion.V2, ActuatorContext.ActuatorAndCloudFoundry); // standard actuators integrated in apps manager
+            services.AddDbMigrationsActuator(Configuration); // actuator that shows which EF migrations have been applied
+            services.AddEnvActuator(Configuration); // actuator that shows info about environment
+            services.AddDistributedTracing(Configuration); // propagates distributed tracing http headers to downstream calls
+            services.AddTask<MigrateDbContextTask<AttendeeContext>>(ServiceLifetime.Transient); // registers task that migrates database. invoked by RunWithTasks in Programs.cs
+            
             services.AddScoped<AppEnv>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<IAttendeeClient, DummyAttendeeClient>();
+            
+            services.AddAtteendeeClient(Configuration); // register different backend implementation based on config
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IAttendeeClient c)
         {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseFileServer();
+//            logger.LogInformation(string.Join("\n", Configuration.AsEnumerable().Select(item => $"{item.Key}: {item.Value}")));
+            
+            app.UseFileServer(); // serve static content from wwwroot
+            
+            // enable actuators middleware
+            app.UseCloudFoundryActuators(MediaTypeVersion.V2,ActuatorContext.ActuatorAndCloudFoundry); 
             app.UseEnvActuator();
-            app.UseCloudFoundryActuators(MediaTypeVersion.V2,ActuatorContext.ActuatorAndCloudFoundry);
+            app.UseDbMigrationsActuator();
 
+            app.UseAtteendeeClient();
             app.UseMvc(routes =>
             {
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+            
+
         }
     }
 }

@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29209.62
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Articulate.UI", "src\Articulate.UI\Articulate.UI.csproj", "{2DA8A923-42D1-4483-8804-515A28D90619}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2DA8A923-42D1-4483-8804-515A28D90619}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DA8A923-42D1-4483-8804-515A28D90619}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DA8A923-42D1-4483-8804-515A28D90619}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DA8A923-42D1-4483-8804-515A28D90619}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24253EB2-9293-49F4-9F02-AF136735404D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24253EB2-9293-49F4-9F02-AF136735404D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24253EB2-9293-49F4-9F02-AF136735404D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24253EB2-9293-49F4-9F02-AF136735404D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1FFB4A7-1BA4-4A43-9171-F71001EC84BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1FFB4A7-1BA4-4A43-9171-F71001EC84BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1FFB4A7-1BA4-4A43-9171-F71001EC84BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1FFB4A7-1BA4-4A43-9171-F71001EC84BC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4FE3C0B6-3D00-4E5B-B05A-72F79D3154FB}
+	EndGlobalSection
+EndGlobal

@@ -1,19 +1,27 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Data.Common;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Articulate.Models;
+using Articulate.Repositories;
 using Articulate.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Steeltoe.CloudFoundry.Connector;
+using Steeltoe.CloudFoundry.Connector.EFCore;
 using Steeltoe.CloudFoundry.Connector.Services;
+using Steeltoe.Common.Tasks;
 using Steeltoe.Extensions.Configuration.CloudFoundry;
 
 namespace Articulate.Controllers
@@ -34,15 +42,17 @@ namespace Articulate.Controllers
         private readonly IAttendeeClient _attendeeClient;
         private readonly ILogger<HomeController> _log;
         private IOptionsSnapshot<CloudFoundryApplicationOptions> _app;
+        private readonly Lazy<RepositoryProvider> _provider;
 
         public HomeController(
             IAttendeeClient attendeeClient, 
             ILogger<HomeController> log, 
-            IOptionsSnapshot<CloudFoundryApplicationOptions> app)
+            IOptionsSnapshot<CloudFoundryApplicationOptions> app, Lazy<RepositoryProvider> provider)
         {
             _attendeeClient = attendeeClient;
             _log = log;
             _app = app;
+            _provider = provider;
         }
         
         public IActionResult Index()
@@ -53,7 +63,13 @@ namespace Articulate.Controllers
         [Route("/services")]
         public async Task<IActionResult> Attendees()
         {
-            return View("Attendees", await _attendeeClient.GetAll());
+            
+            ViewBag.RepositoryProvider = _provider;
+            ViewBag.IsMigrated = _attendeeClient.IsMigrated;
+            ViewBag.Endpoint = _attendeeClient.Endpoint;
+            ViewBag.CanConnect = _attendeeClient.CanConnect;
+            return View("Attendees", _attendeeClient.CanConnect && _attendeeClient.IsMigrated ? await _attendeeClient.GetAll() : null);
+            
         }
         
         [Route("/clean")]
@@ -100,6 +116,14 @@ namespace Articulate.Controllers
             System.IO.File.WriteAllText(fileName,DateTime.Now.ToString("MM-dd-yy HH:mm:ss"));
             ViewBag.SSHFile = new FileInfo(fileName).FullName;
             return View("Basics");
+        }
+
+        [Route("/migrate")]
+        public async Task<IActionResult> Migrate([FromServices]IEnumerable<IApplicationTask> tasks)
+        {
+            var migrationTask = tasks.OfType<MigrateDbContextTask<AttendeeContext>>().FirstOrDefault();
+            migrationTask?.Run();
+            return await Attendees();
         }
 
         [Route("/bluegreen")]

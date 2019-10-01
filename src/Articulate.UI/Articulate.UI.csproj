@@ -14,12 +14,13 @@
   <ItemGroup>
     <PackageReference Include="GitInfo" Version="2.0.20" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.4" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.2.0" />
     <PackageReference Include="Steeltoe.CloudFoundry.Connector.EFCore" Version="2.3.0" />
     <PackageReference Include="Steeltoe.CloudFoundry.ConnectorCore" Version="2.3.0" />
     <PackageReference Include="Steeltoe.Management.CloudFoundryCore" Version="2.3.0" />
+    <PackageReference Include="Steeltoe.Management.TaskCore" Version="2.3.0" />
     <PackageReference Include="Steeltoe.Management.TracingCore" Version="2.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="2.2.4" />
   </ItemGroup>
   <ItemGroup>
     <None Include="git.properties">
@@ -38,8 +39,16 @@
     <WriteLinesToFile File="git.properties" Lines="git.build.host=$([System.Environment]::GetEnvironmentVariable('COMPUTERNAME'))" Overwrite="false" />
   </Target>
   <ItemGroup>
-    <ProjectReference Include="..\Articulate.Common\Articulate.Common.csproj" />
+    <Content Update="appsettings.json">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="appsettings.development.json">
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
-
-  
+  <ItemGroup>
+    <Folder Include="Migrations" />
+  </ItemGroup>
 </Project>

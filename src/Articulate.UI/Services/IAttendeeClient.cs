@@ -7,7 +7,11 @@ namespace Articulate.Services
     public interface IAttendeeClient
     {
         Task<List<Attendee>> GetAll();
-        Task<List<Attendee>> Add(string firstName, string lastName, string emailAddress);
-        Task<List<Attendee>> DeleteAll();
+        Task Add(string firstName, string lastName, string emailAddress);
+        Task DeleteAll();
+
+        bool IsMigrated { get; }
+        string Endpoint { get; }
+        bool CanConnect { get; }
     }
 }

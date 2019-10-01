@@ -1,0 +1,15 @@
+# Requirements
+
+==  PCF Environment
+
+* Pivotal Platform environment with Pivotal Application Services
+* Database access
+    - MySQL tile 
+    OR
+    - SQL Server database
+
+==  Local System
+* Install the CF CLI
+* .NET Core 2.2 SDK
+* Visual Studio or equivalent IDE
+
