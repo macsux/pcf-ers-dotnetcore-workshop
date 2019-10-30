@@ -69,7 +69,6 @@ namespace Articulate.Controllers
         [Route("/services")]
         public async Task<IActionResult> Attendees()
         {
-            
             ViewBag.RepositoryProvider = _provider;
             ViewBag.IsMigrated = _attendeeClient.IsMigrated;
             ViewBag.Endpoint = _attendeeClient.Endpoint;
