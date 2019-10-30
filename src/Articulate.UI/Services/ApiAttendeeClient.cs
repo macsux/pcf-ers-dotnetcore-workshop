@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Articulate.Models;
 #pragma warning disable 1998
@@ -9,6 +10,10 @@ namespace Articulate.Services
 {
     public partial class ApiAttendeeClient : IAttendeeClient
     {
+        public ApiAttendeeClient(HttpClient c)
+        {
+        }
+
         public async Task<List<Attendee>> GetAll()
         {
             throw new NotImplementedException();

@@ -1,0 +1,21 @@
+<p>
+	This is where we examine how configuration management works in .NET Core. Configuration values can come from
+	multiple sources (aka <i>Configuration Providers</i>). They are all registered inside a single configuration
+	object, which provides a single consolidated view of all keys and values in the underlying providers.
+</p>
+<p>
+	When the same configuration setting appears in multiple providers, the provider that is registered last
+	will be the one providing the final value. Built in providers include JSON, Environmental Variables,
+	and console arguments.
+</p>
+
+<p>
+	With many applications and environments, configuration management adds significant opearational
+	overhead. In these cases, you can use a Spring Cloud Config Server to consolidate all configuration settings
+	in one place. Config Server acts as a configuration service API that plugs as just another Configuration
+	Provider into standard .NET configuration. Config Server itself reads it config values either out of one of
+	the support backing stores, such as Git or Hashicorp Vault. This allows configuration across multiple apps
+	and environments to be consolidated into a single location, and provides version control and auditing.
+	Config server also support encryption for serving sensitive values such as database connection strings.
+</p>
+<img src="/images/config-server.png" width="100%"/>

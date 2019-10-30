@@ -1,0 +1,7 @@
+ErrorMessage: These are not the errors you're looking for
+Logging: 
+  IncludeScopes: false
+  LogLevel:
+    Default: Warning
+    Articulate: Information
+    Steeltoe.CloudFoundry.Connector.EFCore: Information

@@ -18,6 +18,7 @@ using Steeltoe.Management.CloudFoundry;
 using Steeltoe.Management.Endpoint;
 using Steeltoe.Management.Endpoint.DbMigrations;
 using Steeltoe.Management.Endpoint.Env;
+using Steeltoe.Management.Endpoint.Refresh;
 using Steeltoe.Management.Hypermedia;
 using Steeltoe.Management.TaskCore;
 using Steeltoe.Management.Tracing;
@@ -41,13 +42,17 @@ namespace Articulate
             services.AddCloudFoundryActuators(Configuration, MediaTypeVersion.V2, ActuatorContext.ActuatorAndCloudFoundry); // standard actuators integrated in apps manager
             services.AddDbMigrationsActuator(Configuration); // actuator that shows which EF migrations have been applied
             services.AddEnvActuator(Configuration); // actuator that shows info about environment
+            services.AddRefreshActuator(Configuration); // actuator to allow refreshing config
             services.AddDistributedTracing(Configuration); // propagates distributed tracing http headers to downstream calls
             services.AddTask<MigrateDbContextTask<AttendeeContext>>(ServiceLifetime.Transient); // registers task that migrates database. invoked by RunWithTasks in Programs.cs
             
             services.AddScoped<AppEnv>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            
+            services.Configure<ColorSettings>(Configuration.GetSection("colors"));
             services.AddAtteendeeClient(Configuration); // register different backend implementation based on config
+            
+            services.AddHttpClient<ApiAttendeeClient>(http => http.BaseAddress = new Uri(Configuration.GetValue<string>("backendUrl")));
+            
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, IAttendeeClient c)
@@ -64,6 +69,7 @@ namespace Articulate
             // enable actuators middleware
             app.UseCloudFoundryActuators(MediaTypeVersion.V2,ActuatorContext.ActuatorAndCloudFoundry); 
             app.UseEnvActuator();
+            app.UseRefreshActuator();
             app.UseDbMigrationsActuator();
 
             app.UseAtteendeeClient();

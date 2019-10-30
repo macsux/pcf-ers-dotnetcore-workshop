@@ -1,0 +1,7 @@
+-------------------------------------------------------------------------------
+Test set: com.example.configserver.ConfigServerApplicationTests
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 8.465 s <<< FAILURE! - in com.example.configserver.ConfigServerApplicationTests
+contextLoads(com.example.configserver.ConfigServerApplicationTests)  Time elapsed: 0.002 s  <<< ERROR!
+java.lang.NoSuchMethodError: org.springframework.boot.builder.SpringApplicationBuilder.<init>([Ljava/lang/Object;)V
+

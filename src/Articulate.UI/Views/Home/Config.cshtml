@@ -1,0 +1,86 @@
+@using Articulate.Models
+@* @model Tuple<ProviderConfigValue,List<ProviderConfigValue>> *@
+@model (ColorSettings ColorConfig, List<ProviderConfigValue> ConfigByProvider, bool FullConfig)
+@{
+	var color = "green";
+	
+}
+<div class="container" role="main">
+
+	<span id="tutorialName" style="display: none;">config</span>
+
+	<div class="page-header">
+		<p>&nbsp;</p>
+		<h1>Configuration</h1>
+	</div>
+	<div class="row ">
+		<div class="col-md-6 ">
+
+			<i>@Model.ColorConfig.Description</i>
+			<div class="row">
+				<div class="col-md-4">
+					<div class="circle" style="background-color: @Model.ColorConfig.First"></div>
+				</div>
+				<div class="col-md-4">
+					<div class="circle" style="background-color: @Model.ColorConfig.Second"></div>
+				</div>
+				<div class="col-md-4">
+					<div class="circle" style="background-color: @Model.ColorConfig.Third"></div>
+				</div>
+				
+				
+			</div>
+			
+			<div class="row">
+				<div class="col-md-12">
+					<br/>
+					<p>
+						The color of the circles comes from values configured in one of the underlying configuration providers.
+						The final value will come from the last registered provider that has the configured key configured. 
+					</p>
+					<div class="pull-right">
+                    						
+						@if (Model.FullConfig)
+						{
+							<a href="/config?full=false" class="btn btn-default">Only Color Config</a>
+						}
+						else
+						{
+							<a href="/config?full=true" class="btn btn-default">Full Config</a>
+						}
+					</div>
+					<div class="clearfix"></div>
+					<ol>
+					@foreach (var provider in Model.ConfigByProvider.GroupBy(x => new {x.Index, x.Provider, x.File}).OrderBy(x => x.Key.Index))
+					{
+						<li><b>@provider.Key.Provider.Name 
+							@if (provider.Key.File != null)
+							{
+								<text>
+								(@provider.Key.File)
+								</text>
+							}
+						</b></li>
+						<ul>
+
+							@foreach (var value in provider)
+							{
+								<li><b>@(value.Key)</b>: @(value.Value)</li>
+
+							}
+						</ul>
+					}
+					</ol>
+
+				</div>
+
+			</div>
+		</div>
+			<div class="col-md-6">
+        		@await Html.PartialAsync("Tutorial", (AppEnv)ViewBag.AppEnv)
+        		@* <partial name="Shared/Tutorial.cshtml" model="ViewBag.AppEnv"/> *@
+        	</div>
+	</div>
+	
+
+</div>

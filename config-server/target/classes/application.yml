@@ -1,0 +1,17 @@
+# set server to use the conventional port that the config server is expected to run on
+server:
+  port: 8888
+
+# Point the config server at the git repo containing the configuration settings
+spring:
+  profiles:
+    active: native
+#    active: git
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/pcfdotnet/spring-cloud-config-workshop-repo.git
+#          uri: C:\\Users\\astakhov\\.IntelliJIdea2019.2\\system\\compile-server\..\config
+        native:
+          searchLocations: file:..\config,file:..\config\{label}

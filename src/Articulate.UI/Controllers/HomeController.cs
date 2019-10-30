@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Articulate.Models;
@@ -22,6 +23,7 @@ using Steeltoe.CloudFoundry.Connector;
 using Steeltoe.CloudFoundry.Connector.EFCore;
 using Steeltoe.CloudFoundry.Connector.Services;
 using Steeltoe.Common.Tasks;
+using Steeltoe.Extensions.Configuration;
 using Steeltoe.Extensions.Configuration.CloudFoundry;
 
 namespace Articulate.Controllers
@@ -43,16 +45,20 @@ namespace Articulate.Controllers
         private readonly ILogger<HomeController> _log;
         private IOptionsSnapshot<CloudFoundryApplicationOptions> _app;
         private readonly Lazy<RepositoryProvider> _provider;
+        private readonly IConfiguration _config;
 
         public HomeController(
             IAttendeeClient attendeeClient, 
             ILogger<HomeController> log, 
-            IOptionsSnapshot<CloudFoundryApplicationOptions> app, Lazy<RepositoryProvider> provider)
+            IOptionsSnapshot<CloudFoundryApplicationOptions> app, 
+            Lazy<RepositoryProvider> provider,
+            IConfiguration config)
         {
             _attendeeClient = attendeeClient;
             _log = log;
             _app = app;
             _provider = provider;
+            _config = config;
         }
         
         public IActionResult Index()
@@ -108,6 +114,29 @@ namespace Articulate.Controllers
             return View("Basics");
         }
 
+        [Route("/config")]
+        public IActionResult Config([FromServices]IOptionsSnapshot<ColorSettings> colorConfig, bool full = false)
+        {
+            var placeholderProvider = ((IConfigurationRoot)_config).Providers.First() as PlaceholderResolverProvider;
+            
+            var dataProperty = typeof(ConfigurationProvider).GetProperty("Data", BindingFlags.Instance | BindingFlags.NonPublic);
+            var configByProvider = ((IConfigurationRoot)placeholderProvider.Configuration).Providers
+                .OfType<ConfigurationProvider>()
+                .SelectMany((provider,i) => ((IDictionary<string, string>) dataProperty.GetValue(provider))
+                    .Select(x => new ProviderConfigValue
+                    {
+                        Provider = provider.GetType(),
+                        File = provider is FileConfigurationProvider ? Path.GetFileName(((FileConfigurationProvider) provider).Source.Path) : null,
+                        Index = i,
+                        Key = x.Key,
+                        Value = x.Value
+                    }))
+                .Where(x => x.Key.StartsWith("colors:", StringComparison.InvariantCultureIgnoreCase) || full)
+                .ToList();
+
+            return View((colorConfig.Value, configByProvider, full));
+        }
+
         [Route("/ssh-file")]
         public IActionResult WriteFile()
         {
@@ -146,5 +175,6 @@ namespace Articulate.Controllers
                 options.Value.InstanceIndex.ToString()
             };
         }
+        
     }
 }
