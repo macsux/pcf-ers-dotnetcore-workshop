@@ -4,12 +4,15 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Articulate.Models;
 using Articulate.Repositories;
 using Articulate.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
@@ -19,9 +22,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Steeltoe.CircuitBreaker.Hystrix;
 using Steeltoe.CloudFoundry.Connector;
 using Steeltoe.CloudFoundry.Connector.EFCore;
 using Steeltoe.CloudFoundry.Connector.Services;
+using Steeltoe.Common.Discovery;
 using Steeltoe.Common.Tasks;
 using Steeltoe.Extensions.Configuration;
 using Steeltoe.Extensions.Configuration.CloudFoundry;
@@ -46,19 +51,22 @@ namespace Articulate.Controllers
         private IOptionsSnapshot<CloudFoundryApplicationOptions> _app;
         private readonly Lazy<RepositoryProvider> _provider;
         private readonly IConfiguration _config;
+        private readonly AppState _appState;
 
         public HomeController(
             IAttendeeClient attendeeClient, 
             ILogger<HomeController> log, 
             IOptionsSnapshot<CloudFoundryApplicationOptions> app, 
             Lazy<RepositoryProvider> provider,
-            IConfiguration config)
+            IConfiguration config,
+            AppState appState)
         {
             _attendeeClient = attendeeClient;
             _log = log;
             _app = app;
             _provider = provider;
             _config = config;
+            _appState = appState;
         }
         
         public IActionResult Index()
@@ -174,6 +182,82 @@ namespace Articulate.Controllers
                 options.Value.InstanceIndex.ToString()
             };
         }
-        
+        [Route("/eureka")]
+        public IActionResult ServiceDiscovery([FromServices]IDiscoveryClient discoveryClient)
+        {
+
+            var services = discoveryClient.Services
+                .Select(serviceName => new DiscoveredService
+                {
+                    Name = serviceName, 
+                    Urls = discoveryClient.GetInstances(serviceName).Select(x => x.Uri.ToString()).ToList()
+                })
+                .ToList();
+            var uri = new Uri(_app.Value.CF_Api);
+            var systemDomain = Regex.Replace(uri.Host, @"^.+?\.", string.Empty);
+            ViewBag.MetricsUrl = $"https://metrics.{systemDomain}/apps/{_app.Value.Application_Id}/dashboard";
+            return View("Eureka", services);
+        }
+
+        [Route("/ping")]
+        public async Task<string> Ping([FromServices]IDiscoveryClient discoveryClient, string targets)
+        {
+            var pong = string.Empty;
+            if (!string.IsNullOrEmpty(targets))
+            {
+                var httpClient = new HttpClient(new DiscoveryHttpClientHandler(discoveryClient));
+                _log.LogTrace($"Ping received. Remaining targets: {targets}");
+                var allTargets = targets.Split(",").Where(x => x != _app.Value.Name).ToList();
+                
+                if (allTargets.Any())
+                {
+                    var nextTarget = allTargets.First();
+                    var remainingTargets = string.Join(",", allTargets.Skip(1));
+                    try
+                    {
+                        _log.LogInformation($"Sending ping request to {nextTarget}");
+                        pong = await httpClient.GetStringAsync($"https://{nextTarget}/ping/?targets={remainingTargets}");
+                    }
+                    catch (Exception e)
+                    {
+                        _log.LogError(e, $"Call to {nextTarget} failed");
+                        pong = $"{nextTarget} failed to answer";
+                    }
+                }
+
+            }
+            return pong.Insert(0, $"Pong from {_app.Value.Name}\n");
+        }
+
+        [Route("/hystrix")]
+        public async Task<IActionResult> CircuitBreaker()
+        {
+            var cmd = new HystrixCommand<string>(HystrixCommandGroupKeyDefault.AsKey("fancyCommand"),
+                () =>
+                {
+                    if (_appState.IsFaulted)
+                        throw new Exception("Failing miserably");
+                    Thread.Sleep(_appState.Timeout);
+                    return "I'm working fine";
+                },
+                () => "We'll be back soon");
+            var result = await cmd.ExecuteAsync();
+            
+            _log.LogInformation($"IsSuccessfulExecution: {cmd.IsSuccessfulExecution}");
+            _log.LogInformation($"IsCircuitBreakerOpen: {cmd.IsCircuitBreakerOpen}");
+            _log.LogInformation($"IsResponseShortCircuited: {cmd.IsResponseShortCircuited}");
+            _log.LogInformation($"IsExecutionComplete: {cmd.IsExecutionComplete}");
+            _log.LogInformation($"IsFailedExecution: {cmd.IsFailedExecution}");
+            _log.LogInformation($"IsResponseRejected: {cmd.IsResponseRejected}");
+            _log.LogInformation($"IsResponseTimedOut: {cmd.IsResponseTimedOut}");
+            return View("Hystrix", (result,cmd, _appState));
+        }
+
+        [Route("seterror")]
+        public void SetErrorState(bool faulted, int timeout)
+        {
+            _appState.IsFaulted = faulted;
+            _appState.Timeout = timeout;
+        }
     }
 }

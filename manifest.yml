@@ -1,6 +1,6 @@
 ---
 applications:
-- name: articulate-ui
+- name: articulate-ui-v2
   memory: 512M
   instances: 1
   random-route: true

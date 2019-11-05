@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Steeltoe.CloudFoundry.Connector.EFCore;
 using Steeltoe.Common.Tasks;
+using Steeltoe.Discovery.Client;
 using Steeltoe.Extensions.Configuration.CloudFoundry;
 using Steeltoe.Management.CloudFoundry;
 using Steeltoe.Management.Endpoint;
@@ -47,10 +48,11 @@ namespace Articulate
             services.AddTask<MigrateDbContextTask<AttendeeContext>>(ServiceLifetime.Transient); // registers task that migrates database. invoked by RunWithTasks in Programs.cs
             
             services.AddScoped<AppEnv>();
+            services.AddSingleton<AppState>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.Configure<ColorSettings>(Configuration.GetSection("colors"));
             services.AddAtteendeeClient(Configuration); // register different backend implementation based on config
-            
+            services.AddDiscoveryClient(Configuration);
             services.AddHttpClient<ApiAttendeeClient>(http => http.BaseAddress = new Uri(Configuration.GetValue<string>("backendUrl")));
             
         }
@@ -71,7 +73,7 @@ namespace Articulate
             app.UseEnvActuator();
             app.UseRefreshActuator();
             app.UseDbMigrationsActuator();
-
+            app.UseDiscoveryClient();
             app.UseAtteendeeClient();
             app.UseMvc(routes =>
             {

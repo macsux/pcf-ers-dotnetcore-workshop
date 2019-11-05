@@ -1,0 +1,73 @@
+@model (string CommandResult, Steeltoe.CircuitBreaker.Hystrix.HystrixCommand<string> CommandExecutionDetails, Articulate.Models.AppState AppState)
+<br/><br/>    
+<div class="container" role="main">
+
+    <div class="page-header">
+        <p>&nbsp;</p>
+        <h1>Circuit Breaker</h1>
+    </div>
+    <div class="pull-right">
+                        	
+        <a onclick="ToggleTimeout()" class="btn btn-default" id="btnTimeout">Enable Timeout</a>
+        <a onclick="ToggleError()" class="btn btn-default" id="btnError">Enable Error</a>
+    </div>
+    <h3>@Model.CommandResult</h3>
+    <table>
+        @foreach (var prop in Model.CommandExecutionDetails.GetType().GetProperties())
+        {
+            <tr>
+                <th>@prop.Name</th>
+                <td>@prop.GetValue(Model.CommandExecutionDetails)</td>
+            </tr>
+        }
+    </table>
+</div>
+<script>
+var isTimeout = @(Model.AppState.Timeout > 0 ? "true" : "false");
+var isError = @(Model.AppState.IsFaulted  ? "true" : "false");
+function ToggleTimeout()
+{
+    if(isTimeout)
+    {
+        isTimeout = false;
+        $("#btnTimeout").html("Enable Timeout");
+        $.ajax("seterror?timeout=0")
+    }
+    else
+    {
+        isTimeout = true;
+        $("#btnTimeout").html("Disable Timeout");
+        $.ajax("seterror?timeout=10000");
+    }   
+}
+function ToggleError()
+{
+    if(isError)
+    {
+        isError = false;
+        $("#btnError").html("Enable Error");
+        $.ajax("seterror?faulted=false")
+    }
+    else
+    {
+        isError = true;
+        $("#btnError").html("Disable Error");
+        $.ajax("seterror?faulted=true");
+    }   
+}
+if(isTimeout){
+    $("#btnTimeout").html("Disable Timeout");
+    
+}
+else {
+    $("#btnTimeout").html("Enable Timeout");
+}
+if(isError){
+    $("#btnError").html("Disable Error");
+    
+}
+else {
+    $("#btnError").html("Enable Error");
+}
+</script>
+

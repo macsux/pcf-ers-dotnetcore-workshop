@@ -13,6 +13,6 @@ spring:
         git:
           uri: https://github.com/macsux/pcf-ers-dotnetcore-workshop.git
           searchPaths: config
-#          uri: C:\\Users\\astakhov\\.IntelliJIdea2019.2\\system\\compile-server\..\config
+#          uri: ${user.dir}\..\config
         native:
           searchLocations: file:..\config,file:..\config\{label}
