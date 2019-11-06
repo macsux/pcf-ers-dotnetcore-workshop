@@ -67,7 +67,7 @@ class Build : NukeBuild
 
     AbsolutePath SourceDirectory => RootDirectory / "src";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
-    AbsolutePath PublishDirectory => RootDirectory / "src" / "bin" / Configuration / "netcoreapp2.2" / "publish";
+    AbsolutePath PublishDirectory => RootDirectory / "src" / "Articulate.UI" / "bin" / Configuration / "netcoreapp2.2" / "publish";
     string PackageZipName => $"articulate-{GitVersion.MajorMinorPatch}.zip";
 
     // Target Serialize => _ => _
@@ -182,7 +182,7 @@ class Build : NukeBuild
 
     Target Release => _ => _
         .Description("Creates a GitHub release (or ammends existing) and uploads the artifact")
-        .DependsOn(Publish)
+        .DependsOn(Pack)
         .Requires(() => GitHubToken)
         .Executes(async () =>
         {
